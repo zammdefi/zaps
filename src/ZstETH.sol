@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+/// @notice zAMM stETH zap helper.
+/// @dev Includes exactIn/exactOut
+/// for Lido staking and ETH claims
+/// in 0.01% Uniswap V3 wstETH pool.
 contract ZstETH {
     constructor() payable {
         IERC20(STETH).approve(WSTETH, type(uint256).max);
     }
 
-    // DIRECT STAKING ****
+    // LIDO STAKING ****
 
     // **** EXACT ETH IN - MAX TOKEN OUT
     // note: If user doesn't care about `to` then just send ETH to STETH or WSTETH
@@ -39,7 +43,7 @@ contract ZstETH {
         }
     }
 
-    // **** EXACT TOKEN OUT - REFUND EXCESS ETH
+    // **** EXACT TOKEN OUT - REFUND EXCESS ETH IN
 
     function ethToExactSTETH(address to, uint256 exactOut) public payable {
         assembly ("memory-safe") {
@@ -150,7 +154,7 @@ contract ZstETH {
         require(uint256(-amount1) >= minOut, Slippage());
     }
 
-    // **** EXACT OUT -
+    // **** EXACT OUT - REFUND EXCESS IN
 
     function swapETHToExactWSTETH(address to, uint256 exactOut) public payable {
         (, int256 amount1) = IV3Swap(POOL).swap(
@@ -177,6 +181,7 @@ contract ZstETH {
         }
     }
 
+    /// @dev note: adjust `maxIn` on the WSTETH basis - this is for onchain simplicity
     function swapSTETHtoExactETH(address to, uint256 exactOut, uint256 maxIn) public {
         (int256 amount0,) = IV3Swap(POOL).swap(
             address(this),
@@ -203,7 +208,7 @@ contract ZstETH {
 
     error Unauthorized();
 
-    /// @dev `uniswapV3SwapCallback`.
+    /// @dev `uniswapV3SwapCallback`
     fallback() external payable {
         unchecked {
             int256 amount0Delta;
@@ -223,20 +228,19 @@ contract ZstETH {
                 to := shr(96, calldataload(add(0x84, 23)))
             }
             require(msg.sender == POOL, Unauthorized());
-            uint256 amountRequired = uint256(zeroForOne ? amount0Delta : amount1Delta);
             if (!zeroForOne) {
                 assembly ("memory-safe") {
-                    pop(call(gas(), WETH, amountRequired, codesize(), 0x00, codesize(), 0x00))
+                    pop(call(gas(), WETH, amount1Delta, codesize(), 0x00, codesize(), 0x00))
                     mstore(0x00, 0xa9059cbb000000000000000000000000)
                     mstore(0x14, POOL)
-                    mstore(0x34, amountRequired)
+                    mstore(0x34, amount1Delta)
                     pop(call(gas(), WETH, 0, 0x10, 0x44, codesize(), 0x00))
                 }
             } else {
                 if (!fromSteth) {
                     assembly ("memory-safe") {
                         let m := mload(0x40)
-                        mstore(0x60, amountRequired)
+                        mstore(0x60, amount0Delta)
                         mstore(0x40, POOL)
                         mstore(0x2c, shl(96, payer))
                         mstore(0x0c, 0x23b872dd000000000000000000000000)
@@ -248,7 +252,7 @@ contract ZstETH {
                         assembly ("memory-safe") {
                             mstore(0x00, 0xa9059cbb000000000000000000000000)
                             mstore(0x14, POOL)
-                            mstore(0x34, amountRequired)
+                            mstore(0x34, amount0Delta)
                             pop(call(gas(), WSTETH, 0, 0x10, 0x44, codesize(), 0x00))
                         }
                     } else {
@@ -258,7 +262,7 @@ contract ZstETH {
                             let S := mload(0x00)
                             mstore(0x00, 0x37cfdaca000000000000000000000000)
                             pop(staticcall(gas(), STETH, 0x10, 0x04, 0x00, 0x20))
-                            let z := mul(amountRequired, mload(0x00))
+                            let z := mul(amount0Delta, mload(0x00))
                             let stNeeded := add(iszero(iszero(mod(z, S))), div(z, S))
                             let m := mload(0x40)
                             mstore(0x60, stNeeded)
@@ -272,12 +276,12 @@ contract ZstETH {
                             pop(call(gas(), WSTETH, 0, 0x1c, 0x24, codesize(), 0x00))
                             mstore(0x00, 0xa9059cbb000000000000000000000000)
                             mstore(0x14, POOL)
-                            mstore(0x34, amountRequired)
+                            mstore(0x34, amount0Delta)
                             pop(call(gas(), WSTETH, 0, 0x10, 0x44, codesize(), 0x00))
                         }
                     }
                 }
-                uint256 amountOut = uint256(-(zeroForOne ? amount1Delta : amount0Delta));
+                uint256 amountOut = uint256(-(amount1Delta));
                 assembly ("memory-safe") {
                     mstore(0x00, 0x2e1a7d4d)
                     mstore(0x20, amountOut)
