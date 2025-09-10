@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Lido Staker by zAMM</title>
+    <link
+      rel="icon"
+      href="https://content.wrappr.wtf/ipfs/bafybeibuct6mftnmgzkbn4tq47elpokbkahkjxq7z6qceptlcsvpxletou"
+      sizes="any"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="https://content.wrappr.wtf/ipfs/bafybeibuct6mftnmgzkbn4tq47elpokbkahkjxq7z6qceptlcsvpxletou"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.umd.min.js"
+      integrity="sha512-UXYETj+vXKSURF1UlgVRLzWRS9ZiQTv3lcL4rbeLyqTXCPNZC6PTLF/Ik3uxm2Zo+E109cUpJPZfLxJsCgKSng=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Helvetica, Arial, sans-serif;
+        background: #0a0a0f;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1920 1080' preserveAspectRatio='xMidYMid slice' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230a0a0f'/%3E%3Cstop offset='25%25' stop-color='%230f0f1a'/%3E%3Cstop offset='50%25' stop-color='%230a0a12'/%3E%3Cstop offset='75%25' stop-color='%230d0d18'/%3E%3Cstop offset='100%25' stop-color='%23060609'/%3E%3C/linearGradient%3E%3Cpattern id='p1' width='120' height='120' patternUnits='userSpaceOnUse'%3E%3Cpath d='M20 30H60L20 60H60' fill='none' stroke='%23627eea' stroke-width='2' opacity='.15'/%3E%3C/pattern%3E%3Cpattern id='p2' width='400' height='400' patternUnits='userSpaceOnUse'%3E%3Cpath d='M50 100H350L50 300H350' fill='none' stroke='%23627eea' stroke-width='3' opacity='.08'/%3E%3C/pattern%3E%3CradialGradient id='vig'%3E%3Cstop offset='50%25' stop-color='%230000' stop-opacity='0'/%3E%3Cstop offset='100%25' stop-color='%230000' stop-opacity='.3'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3Crect width='100%25' height='100%25' fill='url(%23p2)' opacity='.5'/%3E%3Crect width='100%25' height='100%25' fill='url(%23p1)'/%3E%3Crect width='100%25' height='100%25' fill='url(%23vig)'/%3E%3C/svg%3E");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        padding: 20px;
+      }
+      .logo-gif {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        width: 32px;
+        height: 32px;
+      }
+      .card {
+        background: #f9f9f9;
+        border-radius: 16px;
+        padding: 28px;
+        width: 100%;
+        max-width: 460px;
+        position: relative;
+      }
+      .apr-badge {
+        margin-left: 8px;
+        color: #16a34a;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 1;
+        opacity: 0.95;
+        cursor: help;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 14px;
+      }
+      .wallet {
+        margin: 8px 0 18px;
+      }
+      .btn {
+        background: #000;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 600;
+        width: 100%;
+        transition: 0.2s;
+      }
+      .btn:hover {
+        background: #333;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-auto-rows: auto;
+        gap: 8px;
+      }
+      .rowhead {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0;
+      }
+      .sel {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid #000;
+        border-radius: 8px;
+        padding: 6px 10px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .ico {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+      }
+      .sym {
+        font-weight: 700;
+      }
+      .amt {
+        width: 100%;
+        border: none;
+        background: transparent;
+        font-size: 28px;
+        font-weight: 600;
+        outline: none;
+        color: #000;
+      }
+      .bal {
+        font-size: 13px;
+        color: #666;
+        margin-top: 6px;
+      }
+      .amt {
+        grid-column: 1 / -1;
+      }
+      .bal {
+        grid-column: 1 / -1;
+      }
+      .swap-mid {
+        display: flex;
+        justify-content: center;
+        margin: -6px 0 6px;
+      }
+      .flip {
+        background: #fff;
+        border: 2px solid #000;
+        border-radius: 8px;
+        padding: 8px;
+        cursor: pointer;
+      }
+      .tiny {
+        font-size: 12px;
+        color: #000;
+      }
+      .subrow {
+        grid-column: 2;
+        justify-self: end;
+        margin: -2px 0 2px;
+      }
+      .pill {
+        padding: 4px 10px;
+        border: 2px solid #000;
+        border-radius: 999px;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .pill:hover {
+        background: #000;
+        color: #fff;
+      }
+      .info {
+        border: 1px solid #000;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #000;
+      }
+      .info .l {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .info .r {
+        margin-left: auto;
+      }
+      .grid {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ccc;
+        border-top-color: #000;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .slip {
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
+      .slip input {
+        appearance: textfield;
+        background: transparent;
+        border: 0;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.25);
+        padding: 2px 0;
+        width: 4.5ch;
+        text-align: right;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .slip input:focus {
+        outline: none;
+        border-bottom-color: #000;
+      }
+      .rcpt {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+      }
+      .rcpt input {
+        flex: 1;
+        border: 2px solid #000;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 50;
+        justify-content: center;
+        align-items: center;
+      }
+      .modalbox {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px;
+        width: 92%;
+        max-width: 380px;
+      }
+      .listitem {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .listitem:hover {
+        background: #f0f0f0;
+      }
+      .at {
+        color: #fff;
+        text-align: center;
+        font-size: 12px;
+        margin-top: 10px;
+      }
+      .at a {
+        color: #fff;
+        text-decoration: none;
+        border-bottom: 1px dotted rgba(255, 255, 255, 0.45);
+      }
+      .err {
+        color: #b00020;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Lido Staker</h1>
+      <span
+        id="aprBadge"
+        class="apr-badge"
+        title="Moving average of APR for 7 days period"
+        >2.6%</span
+      >
+
+
+      <div class="branding">
+        <img
+          src="https://content.wrappr.wtf/ipfs/bafkreifquimjbbzmuktrsugeqdkzp26cxmpcfcvoufwy6oyruhxs7kpa7u"
+          alt="Based"
+          class="logo-gif"
+        />
+      </div>
+      <div class="wallet">
+        <button id="connect" class="btn">Connect Wallet</button>
+      </div>
+
+
+      <div class="row">
+        <div class="rowhead">
+          <span class="tiny" style="color: #718096">From</span>
+          <div class="sel" onclick="openModal('from')">
+            <span id="fromIco" class="ico"></span>
+            <span id="fromSym" class="sym">ETH</span>
+          </div>
+        </div>
+        <div class="subrow">
+          <button class="pill" onclick="setMax()">MAX</button>
+        </div>
+        <input id="fromAmt" class="amt" placeholder="0.0" inputmode="decimal" />
+        <div id="fromBal" class="bal">Balance: --</div>
+      </div>
+
+
+      <div class="swap-mid">
+        <button class="flip" onclick="flip()">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#000"
+            stroke-width="2"
+          >
+            <path d="M7 10L12 15L17 10" />
+          </svg>
+        </button>
+      </div>
+
+
+      <div class="row">
+        <div class="rowhead">
+          <span class="tiny" style="color: #718096">To</span>
+          <div class="sel" onclick="openModal('to')">
+            <span id="toIco" class="ico"></span>
+            <span id="toSym" class="sym">stETH</span>
+          </div>
+        </div>
+        <input id="toAmt" class="amt" placeholder="0.0" inputmode="decimal" />
+        <div id="toBal" class="bal">Balance: --</div>
+      </div>
+
+
+      <div class="info" id="routeBox" style="display: none">
+        <div class="l">
+          <span>Route:</span>
+          <span id="routeTxt" style="font-weight: 700">--</span>
+          <span
+            id="swapBadge"
+            class="pill"
+            style="pointer-events: none; display: none"
+            >swap</span
+          >
+          <span
+            id="stakeBadge"
+            class="pill"
+            style="pointer-events: none; display: none"
+            >stake</span
+          >
+          <span
+            id="wrapBadge"
+            class="pill"
+            style="pointer-events: none; display: none"
+            >wrap</span
+          >
+          <span
+            id="unwrapBadge"
+            class="pill"
+            style="pointer-events: none; display: none"
+            >unwrap</span
+          >
+        </div>
+        <div class="l" style="margin-top: 8px">
+          <span>Slippage:</span>
+          <div id="slipWrap" class="slip">
+            <input
+              id="slip"
+              type="number"
+              min="0"
+              max="20"
+              step="0.1"
+              value="0.5"
+            />
+            <span>%</span>
+          </div>
+          <span
+            id="slipNA"
+            style="margin-left: 6px; color: #6b7280; display: none"
+            >n/a</span
+          >
+        </div>
+      </div>
+
+
+      <div class="rcpt">
+        <input id="recipient" placeholder="Recipient (optional 0x…)" />
+      </div>
+
+
+      <div style="margin-top: 14px">
+        <button id="go" class="btn" disabled>Connect Wallet</button>
+      </div>
+
+
+      <div
+        id="hint"
+        class="tiny"
+        style="margin-top: 10px; color: #6b7280"
+      ></div>
+    </div>
+
+
+    <div class="at">
+      <a href="https://lido.fi" target="_blank" rel="noreferrer">Lido</a> •
+      <a
+        href="https://etherscan.io/address/0x000000000088649055D9D23362B819A5cfF11f02"
+        target="_blank"
+        rel="noreferrer"
+        >ZstETH</a
+      >
+      •
+      <a
+        href="https://etherscan.io/address/0x658bF1A6608210FDE7310760f391AD4eC8006A5F"
+        target="_blank"
+        rel="noreferrer"
+        >zQuoter</a
+      >
+      by
+      <a href="https://zamm.finance/" target="_blank" rel="noopener noreferrer"
+        >zamm.finance</a
+      >
+      by
+      <a href="https://x.com/z0r0zzz" target="_blank" rel="noopener noreferrer"
+        >z0r0z</a
+      >
+      <div class="attribution" style="font-style: italic; margin-top: 6px">
+        100% onchain staking solver. Stake your ETH and claim rewards at
+        anytime. From the best source.
+      </div>
+    </div>
+
+
+    <!-- Token modal -->
+    <div id="modal" class="modal" onclick="closeModal(event)">
+      <div class="modalbox" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 10px">Select Token</h3>
+        <div id="list"></div>
+      </div>
+    </div>
+
+
+    <script>
+      /*** Constants ***/
+      const CHAIN_ID = 1; // Ethereum mainnet
+      const ADDR = {
+        ZSTETH: "0x000000000088649055D9D23362B819A5cfF11f02",
+        ZQUOTER: "0x658bF1A6608210FDE7310760f391AD4eC8006A5F",
+        STETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+        WSTETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+        ZERO: "0x0000000000000000000000000000000000000000",
+      };
+      const UNIV3_FEE_1BP = 100; // 0.01%
+
+
+      /*** Token meta ***/
+      const stETHSVG = `<svg width="24" height="24" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#a)"><rect width="80" height="80" rx="40" fill="#fff"/><path opacity=".6" d="M54.767 35.471l.403.614c4.545 6.92 3.53 15.984-2.442 21.79-3.513 3.416-8.117 5.125-12.721 5.126 0 0 0 0 14.76-27.53Z" fill="#00A3FF"/><path opacity=".2" d="M40.006 43.838l14.76-8.367c-14.76 27.53-14.76 27.53-14.76 27.53 0-5.996 0-12.866 0-19.163Z" fill="#00A3FF"/><path d="m25.233 35.471-.403.614c-4.546 6.92-3.53 15.984 2.441 21.79 3.514 3.416 8.118 5.125 12.722 5.126 0 0 0 0-14.76-27.53Z" fill="#00A3FF"/><path opacity=".6" d="M39.988 43.838l-14.759-8.367c14.76 27.53 14.76 27.53 14.76 27.53 0-5.996 0-12.866 0-19.163Z" fill="#00A3FF"/><path opacity=".2" d="M40.012 25.147v14.43l12.713-7.21-12.713-7.22Z" fill="#00A3FF"/><path opacity=".6" d="M40.008 25.147l-12.723 7.22 12.723 7.21v-14.43Z" fill="#00A3FF"/><path d="M40.008 13.012 27.285 32.37l12.723-7.24V13.012Z" fill="#00A3FF"/><path opacity=".6" d="m40.012 25.13 12.723 7.24L40.012 13v12.13Z" fill="#00A3FF"/></g><defs><clipPath id="a"><rect width="80" height="80" rx="40" fill="#fff"/></clipPath></defs></svg>`;
+      const wstETHSVG = `<svg width="24" height="24" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#a)"><rect width="80" height="80" rx="40" fill="#00A3FF"/><path opacity=".6" d="M54.767 35.944l.403.618c4.546 6.974 3.53 16.106-2.442 21.957-3.513 3.442-8.117 5.164-12.721 5.165 0 0 0 0 14.76-27.74Z" fill="#fff"/><path opacity=".2" d="M40.006 44.374l14.759-8.43C40.006 63.683 40.006 63.683 40.006 63.683c0-6.041 0-12.964 0-19.309Z" fill="#fff"/><path d="m25.233 35.944-.403.618c-4.546 6.974-3.53 16.106 2.441 21.957 3.514 3.442 8.118 5.164 12.722 5.165 0 0 0 0-14.76-27.74Z" fill="#fff"/><path opacity=".6" d="M39.988 44.374 25.228 35.944c14.76 27.739 14.76 27.739 14.76 27.739 0-6.041 0-12.964 0-19.309Z" fill="#fff"/><path opacity=".2" d="M40.012 25.541v14.54l12.713-7.266-12.713-7.274Z" fill="#fff"/><path opacity=".6" d="M40.008 25.541l-12.723 7.274 12.723 7.266v-14.54Z" fill="#fff"/><path d="M40.008 13.312 27.285 32.82l12.723-7.295V13.312Z" fill="#fff"/><path opacity=".6" d="m40.012 25.523 12.723 7.296L40.012 13.3v12.223Z" fill="#fff"/></g><defs><clipPath id="a"><rect width="80" height="80" rx="40" fill="#fff"/></clipPath></defs></svg>`;
+      const ETHSVG = `<svg fill="#000" width="24" height="24" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><g fill-rule="evenodd"><path d="M16 32C7.163 32 0 24.837 0 16S7.163 0 16 0s16 7.163 16 16-7.163 16-16 16zm7.994-15.781L16.498 4 9 16.22l7.498 4.353 7.496-4.354zM24 17.616l-7.502 4.351L9 17.617l7.498 10.378L24 17.616z"/><g fill-rule="nonzero"><path fill-opacity=".298" d="M16.498 4v8.87l7.497 3.35zm0 17.968v6.027L24 17.616z"/><path fill-opacity=".801" d="M16.498 20.573l7.497-4.353-7.497-3.348z"/><path fill-opacity=".298" d="M9 16.22l7.498 4.353v-7.701z"/></g></g></svg>`;
+
+
+      const TOKENS = {
+        ETH: { symbol: "ETH", address: ADDR.ZERO, decimals: 18, icon: ETHSVG },
+        stETH: {
+          symbol: "stETH",
+          address: ADDR.STETH,
+          decimals: 18,
+          icon: stETHSVG,
+        },
+        wstETH: {
+          symbol: "wstETH",
+          address: ADDR.WSTETH,
+          decimals: 18,
+          icon: wstETHSVG,
+        },
+      };
+
+
+      /*** Minimal ABIs ***/
+      const ERC20_ABI = [
+        "function balanceOf(address) view returns (uint256)",
+        "function allowance(address,address) view returns (uint256)",
+        "function approve(address,uint256) returns (bool)",
+        "function decimals() view returns (uint8)",
+      ];
+
+
+      const STETH_ABI = [
+        "function getSharesByPooledEth(uint256) view returns (uint256)",
+        "function getPooledEthByShares(uint256) view returns (uint256)",
+      ];
+
+
+      const WSTETH_ABI = [
+        "function wrap(uint256) returns (uint256)",
+        "function unwrap(uint256) returns (uint256)",
+        "function getStETHByWstETH(uint256) view returns (uint256)",
+        "function getWstETHByStETH(uint256) view returns (uint256)",
+      ];
+
+
+      const ZSTETH_ABI = [
+        // staking
+        "function exactETHToSTETH(address to) payable returns (uint256)",
+        "function exactETHToWSTETH(address to) payable returns (uint256)",
+        "function ethToExactSTETH(address to,uint256 exactOut) payable",
+        "function ethToExactWSTETH(address to,uint256 exactOut) payable",
+        // swaps
+        "function swapExactETHToWSTETH(address to,uint256 minOut) payable",
+        "function swapETHToExactWSTETH(address to,uint256 exactOut) payable",
+        "function swapExactSTETHtoETH(address to,uint256 amount,uint256 minOut)",
+        "function swapSTETHtoExactETH(address to,uint256 exactOut,uint256 maxIn)",
+        "function swapExactWSTETHtoETH(address to,uint256 amount,uint256 minOut)",
+        "function swapWSTETHtoExactETH(address to,uint256 exactOut,uint256 maxIn)",
+      ];
+
+
+      const ZQUOTER_ABI = [
+        "function quoteV3(bool exactOut,address tokenIn,address tokenOut,uint24 fee,uint256 swapAmount) view returns (uint256 amountIn,uint256 amountOut)",
+      ];
+
+
+      /*** Globals ***/
+      let provider, signer, account;
+      let from = "ETH";
+      let to = "stETH";
+      let lastTyped = "from"; // 'from' or 'to'
+      let slippageBps = 50; // 0.5%
+      let planned = null; // memo of last computed plan/route
+
+
+      /*** Helpers ***/
+      const $ = (id) => document.getElementById(id);
+      const fmt = (v, d = 6) =>
+        Number(v || 0).toLocaleString(undefined, { maximumFractionDigits: d });
+      const parseNum = (s) => {
+        const n = parseFloat(String(s || "").trim());
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+      };
+      const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+      const bn = (v) => BigInt(v);
+      const mulDiv = (x, num, den) => (bn(x) * bn(num)) / bn(den);
+      const ceilDiv = (x, y) => (bn(x) + bn(y) - 1n) / bn(y);
+
+
+      function setIcons() {
+        $("fromIco").innerHTML = TOKENS[from].icon;
+        $("toIco").innerHTML = TOKENS[to].icon;
+        $("fromSym").textContent = TOKENS[from].symbol;
+        $("toSym").textContent = TOKENS[to].symbol;
+      }
+
+
+      function ensureDifferentSides(sideChanged) {
+        if (from === to) {
+          // If user selected same on 'to', flip 'from' to the other remaining token
+          if (sideChanged === "to") {
+            // pick a different token deterministically
+            const alt = ["ETH", "stETH", "wstETH"].find((sym) => sym !== to);
+            from = alt;
+          } else {
+            const alt = ["ETH", "stETH", "wstETH"].find((sym) => sym !== from);
+            to = alt;
+          }
+        }
+        setIcons();
+      }
+
+
+      /*** Wallet ***/
+      async function connect() {
+        try {
+          if (!window.ethereum) {
+            alert("Please install MetaMask");
+            return;
+          }
+          provider = new ethers.BrowserProvider(window.ethereum);
+          const net = await provider.getNetwork();
+          if (Number(net.chainId) !== CHAIN_ID) {
+            await window.ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: "0x1" }],
+            });
+          }
+          signer = await provider.getSigner();
+          account = await signer.getAddress();
+          $("connect").textContent =
+            account.slice(0, 6) + "..." + account.slice(-4);
+          $("connect").style.background = "#000";
+          $("go").textContent = "Enter an amount";
+          $("go").disabled = true;
+          await refreshBalances();
+        } catch (e) {
+          console.error(e);
+          alert("Failed to connect.");
+        }
+      }
+
+
+      async function refreshBalances() {
+        if (!provider || !account) return;
+        try {
+          // from balance
+          const f = TOKENS[from],
+            t = TOKENS[to];
+          if (f.address === ADDR.ZERO) {
+            const bal = await provider.getBalance(account);
+            $("fromBal").textContent = `Balance: ${fmt(
+              ethers.formatEther(bal)
+            )} ETH`;
+          } else {
+            const c = new ethers.Contract(f.address, ERC20_ABI, provider);
+            const bal = await c.balanceOf(account);
+            $("fromBal").textContent = `Balance: ${fmt(
+              ethers.formatUnits(bal, f.decimals)
+            )} ${f.symbol}`;
+          }
+          if (t.address === ADDR.ZERO) {
+            const bal = await provider.getBalance(account);
+            $("toBal").textContent = `Balance: ${fmt(
+              ethers.formatEther(bal)
+            )} ETH`;
+          } else {
+            const c = new ethers.Contract(t.address, ERC20_ABI, provider);
+            const bal = await c.balanceOf(account);
+            $("toBal").textContent = `Balance: ${fmt(
+              ethers.formatUnits(bal, t.decimals)
+            )} ${t.symbol}`;
+          }
+        } catch (e) {
+          console.warn("balance", e);
+        }
+      }
+
+
+      /*** Token picker ***/
+      let modalSide = null;
+      function openModal(side) {
+        modalSide = side;
+        const list = $("list");
+        list.innerHTML = "";
+        ["ETH", "stETH", "wstETH"].forEach((sym) => {
+          const it = document.createElement("div");
+          it.className = "listitem";
+          it.onclick = () => {
+            if (modalSide === "from") from = sym;
+            else to = sym;
+            ensureDifferentSides(modalSide);
+            closeModal();
+            onEdit();
+          };
+          it.innerHTML = `<span class="ico">${TOKENS[sym].icon}</span><b>${sym}</b>`;
+          list.appendChild(it);
+        });
+        $("modal").style.display = "flex";
+      }
+      function closeModal(ev) {
+        $("modal").style.display = "none";
+      }
+
+
+      /*** Flip sides ***/
+      function flip() {
+        [from, to] = [to, from];
+        ensureDifferentSides("from");
+        onEdit();
+      }
+
+
+      /*** Inputs ***/
+      function onFromInput() {
+        lastTyped = "from";
+        debounceQuote();
+      }
+      function onToInput() {
+        lastTyped = "to";
+        debounceQuote();
+      }
+      function onEdit() {
+        setIcons();
+        refreshBalances();
+        debounceQuote();
+      }
+      function setMax() {
+        (async () => {
+          if (!provider || !account) {
+            await connect();
+            if (!account) return;
+          }
+          const f = TOKENS[from];
+          let raw;
+          if (f.address === ADDR.ZERO) {
+            raw = await provider.getBalance(account);
+            raw = (raw * 98n) / 100n; // leave 2% for gas
+          } else {
+            const c = new ethers.Contract(f.address, ERC20_ABI, provider);
+            raw = await c.balanceOf(account);
+          }
+          $("fromAmt").value = ethers
+            .formatUnits(raw, f.decimals)
+            .replace(/\.?0+$/, "");
+          lastTyped = "from";
+          debounceQuote();
+        })().catch(console.error);
+      }
+
+
+      /*** Slippage show/hide ***/
+      function showSlippage(show) {
+        const wrap = $("slipWrap");
+        const na = $("slipNA");
+        if (show) {
+          wrap.style.display = "inline-flex";
+          na.style.display = "none";
+        } else {
+          wrap.style.display = "none";
+          na.style.display = "inline";
+        }
+      }
+      $("slip").addEventListener("input", () => {
+        const v = clamp(parseNum($("slip").value), 0, 20);
+        slippageBps = Math.round(v * 100);
+        if (planned && planned.kind === "swap") debounceQuote();
+      });
+
+
+      /*** Core quoting + planning ***/
+      const debounced = (fn, ms = 300) => {
+        let t;
+        return (...a) => {
+          clearTimeout(t);
+          t = setTimeout(() => fn(...a), ms);
+        };
+      };
+      const debounceQuote = debounced(getPlan, 300);
+
+
+      async function getPlan() {
+        planned = null;
+        const btn = $("go");
+        const fStr = $("fromAmt").value.trim();
+        const tStr = $("toAmt").value.trim();
+        const haveFrom = parseNum(fStr) > 0;
+        const haveTo = parseNum(tStr) > 0;
+
+
+        // state prep
+        if (!account) {
+          btn.disabled = false;
+          btn.textContent = "Connect Wallet";
+          $("routeBox").style.display = "none";
+          return;
+        }
+        if (from === to) {
+          btn.disabled = true;
+          btn.textContent = "Select different tokens";
+          $("routeBox").style.display = "none";
+          return;
+        }
+
+
+        $("routeBox").style.display = "block";
+        $("routeTxt").textContent = "--";
+        ["swapBadge", "stakeBadge", "wrapBadge", "unwrapBadge"].forEach(
+          (id) => ($(id).style.display = "none")
+        );
+
+
+        try {
+          btn.innerHTML = `<span class="loading"></span> Routing...`;
+          btn.disabled = true;
+
+
+          // contracts
+          const st = new ethers.Contract(ADDR.STETH, STETH_ABI, provider);
+          const wst = new ethers.Contract(ADDR.WSTETH, WSTETH_ABI, provider);
+          const zq = new ethers.Contract(ADDR.ZQUOTER, ZQUOTER_ABI, provider);
+
+
+          // helpers
+          const F = TOKENS[from],
+            T = TOKENS[to];
+          const toWei = (x, dec) => ethers.parseUnits(String(x), dec);
+          const fromWei = (x, dec) => ethers.formatUnits(x, dec);
+
+
+          let plan = {
+            kind: "",
+            action: "", // swap | stake | wrap | unwrap
+            exact: "in", // in | out
+            fromAmt: 0n,
+            toAmt: 0n,
+            minOut: 0n,
+            maxIn: 0n,
+            route: "",
+            needsApproval: null,
+            approveSpender: null,
+            approveAmount: 0n,
+          };
+
+
+          /*** Decide exactIn vs exactOut ***/
+          const exactIn = lastTyped === "from";
+
+
+          /*** Compute based on pairs ***/
+          // 1) ETH -> stETH (stake)
+          if (F.symbol === "ETH" && T.symbol === "stETH") {
+            if (exactIn) {
+              const aIn = toWei(fStr, 18);
+              // Lido returns SHARES; convert to TOKEN units for display
+              const outShares = await st.getSharesByPooledEth(aIn);
+              const outTokens = await st.getPooledEthByShares(outShares);
+              $("toAmt").value = fromWei(outTokens, 18);
+              plan = {
+                kind: "stake",
+                action: "stake_steth_exactin",
+                exact: "in",
+                fromAmt: aIn,
+                toAmt: outTokens,
+                route: "Stake via Lido",
+              };
+              showSlippage(false);
+              $("stakeBadge").style.display = "inline-block";
+            } else {
+              const aOut = toWei(tStr, 18); // desired stETH (tokens)
+              // At current rate, ETH in ≈ stETH out; no shares math needed for display
+              $("fromAmt").value = fromWei(aOut, 18);
+              plan = {
+                kind: "stake",
+                action: "stake_steth_exactout",
+                exact: "out",
+                fromAmt: aOut,
+                toAmt: aOut,
+                route: "Stake via Lido (exact out)",
+              };
+              showSlippage(false);
+              $("stakeBadge").style.display = "inline-block";
+            }
+          }
+
+
+          // 2) ETH -> wstETH (choose stake vs AMM)
+          else if (F.symbol === "ETH" && T.symbol === "wstETH") {
+            if (exactIn) {
+              const aIn = toWei(fStr, 18);
+              const quote = await zq.quoteV3(
+                false,
+                ADDR.ZERO,
+                ADDR.WSTETH,
+                UNIV3_FEE_1BP,
+                aIn
+              );
+              const ammOut = quote.amountOut; // wstETH out
+              const stakeOut = await st.getSharesByPooledEth(aIn); // equals wst shares
+              const ammBetter = ammOut > stakeOut;
+
+
+              $("toAmt").value = fromWei(ammBetter ? ammOut : stakeOut, 18);
+              if (ammBetter) {
+                // swap path
+                const minOut = mulDiv(
+                  ammOut,
+                  10000n - BigInt(slippageBps),
+                  10000n
+                );
+                plan = {
+                  kind: "swap",
+                  action: "swap_eth_to_wst_exactin",
+                  exact: "in",
+                  fromAmt: aIn,
+                  toAmt: ammOut,
+                  minOut,
+                  route: "Uniswap v3 0.01%",
+                };
+                showSlippage(true);
+                $("swapBadge").style.display = "inline-block";
+              } else {
+                // stake path
+                plan = {
+                  kind: "stake",
+                  action: "stake_wsteth_exactin",
+                  exact: "in",
+                  fromAmt: aIn,
+                  toAmt: stakeOut,
+                  route: "Stake via Lido (auto-wrap)",
+                };
+                showSlippage(false);
+                $("stakeBadge").style.display = "inline-block";
+              }
+            } else {
+              const aOut = toWei(tStr, 18); // desired wstETH shares
+              const { amountIn: ammIn } = await zq.quoteV3(
+                true,
+                ADDR.ZERO,
+                ADDR.WSTETH,
+                UNIV3_FEE_1BP,
+                aOut
+              );
+              const stakeEthIn = await st.getPooledEthByShares(aOut);
+              const ammBetter = ammIn < stakeEthIn;
+
+
+              const chosenIn = ammBetter ? ammIn : stakeEthIn;
+              $("fromAmt").value = fromWei(chosenIn, 18);
+
+
+              if (ammBetter) {
+                const maxIn = ceilDiv(
+                  bn(ammIn) * (10000n + BigInt(slippageBps)),
+                  10000n
+                );
+                plan = {
+                  kind: "swap",
+                  action: "swap_eth_to_wst_exactout",
+                  exact: "out",
+                  fromAmt: maxIn,
+                  toAmt: aOut,
+                  maxIn,
+                  route: "Uniswap v3 0.01% (exact out)",
+                };
+                showSlippage(true);
+                $("swapBadge").style.display = "inline-block";
+              } else {
+                plan = {
+                  kind: "stake",
+                  action: "stake_wsteth_exactout",
+                  exact: "out",
+                  fromAmt: stakeEthIn,
+                  toAmt: aOut,
+                  route: "Stake via Lido (exact out)",
+                };
+                showSlippage(false);
+                $("stakeBadge").style.display = "inline-block";
+              }
+            }
+          }
+
+
+          // 3) stETH -> wstETH (wrap)
+          else if (F.symbol === "stETH" && T.symbol === "wstETH") {
+            if (exactIn) {
+              const aIn = toWei(fStr, 18);
+              const out = await st.getSharesByPooledEth(aIn);
+              $("toAmt").value = fromWei(out, 18);
+              plan = {
+                kind: "wrap",
+                action: "wrap_exactin",
+                exact: "in",
+                fromAmt: aIn,
+                toAmt: out,
+                route: "Wrap via wstETH",
+                needsApproval: "stETH",
+                approveSpender: ADDR.WSTETH,
+                approveAmount: aIn,
+              };
+              showSlippage(false);
+              $("wrapBadge").style.display = "inline-block";
+            } else {
+              const aOut = toWei(tStr, 18); // desired wst shares
+              const stIn = await st.getPooledEthByShares(aOut);
+              $("fromAmt").value = fromWei(stIn, 18);
+              plan = {
+                kind: "wrap",
+                action: "wrap_exactout",
+                exact: "out",
+                fromAmt: stIn,
+                toAmt: aOut,
+                route: "Wrap via wstETH",
+                needsApproval: "stETH",
+                approveSpender: ADDR.WSTETH,
+                approveAmount: stIn,
+              };
+              showSlippage(false);
+              $("wrapBadge").style.display = "inline-block";
+            }
+          }
+
+
+          // 4) wstETH -> stETH (unwrap)
+          else if (F.symbol === "wstETH" && T.symbol === "stETH") {
+            if (exactIn) {
+              const aIn = toWei(fStr, 18);
+              const out = await st.getPooledEthByShares(aIn);
+              $("toAmt").value = fromWei(out, 18);
+              plan = {
+                kind: "unwrap",
+                action: "unwrap_exactin",
+                exact: "in",
+                fromAmt: aIn,
+                toAmt: out,
+                route: "Unwrap via wstETH",
+              };
+              showSlippage(false);
+              $("unwrapBadge").style.display = "inline-block";
+            } else {
+              const aOut = toWei(tStr, 18);
+              const wstIn = await st.getSharesByPooledEth(aOut);
+              $("fromAmt").value = fromWei(wstIn, 18);
+              plan = {
+                kind: "unwrap",
+                action: "unwrap_exactout",
+                exact: "out",
+                fromAmt: wstIn,
+                toAmt: aOut,
+                route: "Unwrap via wstETH",
+              };
+              showSlippage(false);
+              $("unwrapBadge").style.display = "inline-block";
+            }
+          }
+
+
+          // 5) stETH -> ETH (swap via wstETH+pool)
+          else if (F.symbol === "stETH" && T.symbol === "ETH") {
+            if (exactIn) {
+              const aIn = toWei(fStr, 18);
+              const wstIn = await st.getSharesByPooledEth(aIn);
+              const { amountOut: ethOut } = await zq.quoteV3(
+                false,
+                ADDR.WSTETH,
+                ADDR.ZERO,
+                UNIV3_FEE_1BP,
+                wstIn
+              );
+              $("toAmt").value = ethers.formatEther(ethOut);
+              const minOut = mulDiv(
+                ethOut,
+                10000n - BigInt(slippageBps),
+                10000n
+              );
+              plan = {
+                kind: "swap",
+                action: "swap_steth_to_eth_exactin",
+                exact: "in",
+                fromAmt: aIn,
+                toAmt: ethOut,
+                minOut,
+                route: "Wrap + Uniswap v3 0.01%",
+                needsApproval: "stETH",
+                approveSpender: ADDR.ZSTETH,
+                approveAmount: aIn,
+              };
+              showSlippage(true);
+              $("swapBadge").style.display = "inline-block";
+            } else {
+              const aOut = toWei(tStr, 18); // desired ETH out
+              const { amountIn: wstIn } = await zq.quoteV3(
+                true,
+                ADDR.WSTETH,
+                ADDR.ZERO,
+                UNIV3_FEE_1BP,
+                aOut
+              );
+              const stMaxIn = await st.getPooledEthByShares(wstIn); // stETH amount that corresponds to wstIn shares
+              const maxInWst = ceilDiv(
+                wstIn * (10000n + BigInt(slippageBps)),
+                10000n
+              );
+              $("fromAmt").value = fromWei(stMaxIn, 18);
+              plan = {
+                kind: "swap",
+                action: "swap_steth_to_eth_exactout",
+                exact: "out",
+                fromAmt: stMaxIn,
+                toAmt: aOut,
+                maxIn: maxInWst,
+                route: "Wrap + Uniswap v3 0.01%",
+                needsApproval: "stETH",
+                approveSpender: ADDR.ZSTETH,
+                approveAmount: stMaxIn,
+              };
+              showSlippage(true);
+              $("swapBadge").style.display = "inline-block";
+            }
+          }
+
+
+          // 6) wstETH -> ETH (swap)
+          else if (F.symbol === "wstETH" && T.symbol === "ETH") {
+            if (exactIn) {
+              const aIn = toWei(fStr, 18);
+              const { amountOut: ethOut } = await zq.quoteV3(
+                false,
+                ADDR.WSTETH,
+                ADDR.ZERO,
+                UNIV3_FEE_1BP,
+                aIn
+              );
+              $("toAmt").value = ethers.formatEther(ethOut);
+              const minOut = mulDiv(
+                ethOut,
+                10000n - BigInt(slippageBps),
+                10000n
+              );
+              plan = {
+                kind: "swap",
+                action: "swap_wsteth_to_eth_exactin",
+                exact: "in",
+                fromAmt: aIn,
+                toAmt: ethOut,
+                minOut,
+                route: "Uniswap v3 0.01%",
+                needsApproval: "wstETH",
+                approveSpender: ADDR.ZSTETH,
+                approveAmount: aIn,
+              };
+              showSlippage(true);
+              $("swapBadge").style.display = "inline-block";
+            } else {
+              const aOut = toWei(tStr, 18);
+              const { amountIn: wstIn } = await zq.quoteV3(
+                true,
+                ADDR.WSTETH,
+                ADDR.ZERO,
+                UNIV3_FEE_1BP,
+                aOut
+              );
+              const maxIn = ceilDiv(
+                wstIn * (10000n + BigInt(slippageBps)),
+                10000n
+              );
+              $("fromAmt").value = fromWei(wstIn, 18);
+              plan = {
+                kind: "swap",
+                action: "swap_wsteth_to_eth_exactout",
+                exact: "out",
+                fromAmt: wstIn,
+                toAmt: aOut,
+                maxIn,
+                route: "Uniswap v3 0.01%",
+                needsApproval: "wstETH",
+                approveSpender: ADDR.ZSTETH,
+                approveAmount: wstIn,
+              };
+              showSlippage(true);
+              $("swapBadge").style.display = "inline-block";
+            }
+          } else {
+            $(
+              "routeTxt"
+            ).innerHTML = `<span class="err">Unsupported pair</span>`;
+            btn.textContent = "Unsupported";
+            btn.disabled = true;
+            planned = null;
+            return;
+          }
+
+
+          $("routeTxt").textContent = plan.route;
+          planned = plan;
+
+
+          // Approval pre-check (to set button text)
+          let label = "Execute";
+          if (plan.kind === "swap") {
+            label =
+              F.symbol === "ETH"
+                ? plan.exact === "in"
+                  ? "Swap"
+                  : "Swap (exact out)"
+                : `Approve & Swap`;
+            if (F.symbol !== "ETH") {
+              const need = await needsApproval(plan);
+              label = need ? "Approve & Swap" : "Swap";
+            }
+          } else if (plan.kind === "stake") {
+            label = "Stake";
+            if (
+              F.symbol === "ETH" &&
+              T.symbol === "wstETH" &&
+              plan.exact === "out" &&
+              plan.route.includes("Lido")
+            ) {
+              label = "Stake (exact out)";
+            } else if (
+              F.symbol === "ETH" &&
+              T.symbol === "stETH" &&
+              plan.exact === "out"
+            ) {
+              label = "Stake (exact out)";
+            }
+          } else if (plan.kind === "wrap") {
+            const need = await needsApproval(plan);
+            label = need ? "Approve & Wrap" : "Wrap";
+          } else if (plan.kind === "unwrap") {
+            label = "Unwrap";
+          }
+
+
+          btn.textContent = label;
+          btn.disabled = false;
+        } catch (e) {
+          console.error(e);
+          $("routeTxt").innerHTML = `<span class="err">Quote failed</span>`;
+          $("go").textContent = "Retry";
+          $("go").disabled = false;
+        }
+      }
+
+
+      async function needsApproval(plan) {
+        if (!plan.needsApproval) return false;
+        const tokenAddr =
+          plan.needsApproval === "stETH" ? ADDR.STETH : ADDR.WSTETH;
+        const spender = plan.approveSpender;
+        const erc = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+        const allowance = await erc.allowance(account, spender);
+        return allowance < plan.approveAmount;
+      }
+
+
+      /*** Execute ***/
+      async function execute() {
+        if (!planned) {
+          await getPlan();
+          if (!planned) return;
+        }
+        try {
+          if (!signer || !account) {
+            await connect();
+            if (!account) return;
+          }
+
+
+          const zst = new ethers.Contract(ADDR.ZSTETH, ZSTETH_ABI, signer);
+          const st = new ethers.Contract(ADDR.STETH, STETH_ABI, signer);
+          const wst = new ethers.Contract(ADDR.WSTETH, WSTETH_ABI, signer);
+          const ercSt = new ethers.Contract(ADDR.STETH, ERC20_ABI, signer);
+          const ercWst = new ethers.Contract(ADDR.WSTETH, ERC20_ABI, signer);
+
+
+          const btn = $("go");
+          const recipientRaw = ($("recipient").value || "").trim();
+          let toAddr =
+            recipientRaw && ethers.isAddress(recipientRaw)
+              ? recipientRaw
+              : account;
+
+
+          // Approval if required
+          if (planned.needsApproval) {
+            const token = planned.needsApproval === "stETH" ? ercSt : ercWst;
+            const spender = planned.approveSpender;
+            const need = await token
+              .allowance(account, spender)
+              .then((v) => v < planned.approveAmount);
+            if (need) {
+              btn.textContent = "Approving…";
+              const tx = await token.approve(spender, ethers.MaxUint256);
+              await tx.wait();
+            }
+          }
+
+
+          // Execute per plan
+          btn.textContent = "Sending…";
+          btn.disabled = true;
+
+
+          let tx;
+          if (planned.kind === "stake") {
+            // direct send when ETH->(stETH|wstETH) exact-in and no custom recipient
+            if (planned.action === "stake_steth_exactin") {
+              if (toAddr === account) {
+                tx = await signer.sendTransaction({
+                  to: ADDR.STETH,
+                  value: planned.fromAmt,
+                  data: "0x",
+                });
+              } else {
+                tx = await zst.exactETHToSTETH(toAddr, {
+                  value: planned.fromAmt,
+                });
+              }
+            } else if (planned.action === "stake_steth_exactout") {
+              tx = await zst.ethToExactSTETH(toAddr, planned.toAmt, {
+                value: planned.fromAmt,
+              });
+            } else if (planned.action === "stake_wsteth_exactin") {
+              if (toAddr === account) {
+                // send to wstETH receive() -> stake+wrap to caller
+                tx = await signer.sendTransaction({
+                  to: ADDR.WSTETH,
+                  value: planned.fromAmt,
+                });
+              } else {
+                tx = await zst.exactETHToWSTETH(toAddr, {
+                  value: planned.fromAmt,
+                });
+              }
+            } else if (planned.action === "stake_wsteth_exactout") {
+              tx = await zst.ethToExactWSTETH(toAddr, planned.toAmt, {
+                value: planned.fromAmt,
+              });
+            }
+          } else if (planned.kind === "swap") {
+            if (planned.action === "swap_eth_to_wst_exactin") {
+              tx = await zst.swapExactETHToWSTETH(toAddr, planned.minOut, {
+                value: planned.fromAmt,
+              });
+            } else if (planned.action === "swap_eth_to_wst_exactout") {
+              tx = await zst.swapETHToExactWSTETH(toAddr, planned.toAmt, {
+                value: planned.fromAmt,
+              });
+            } else if (planned.action === "swap_steth_to_eth_exactin") {
+              tx = await zst.swapExactSTETHtoETH(
+                toAddr,
+                planned.fromAmt,
+                planned.minOut
+              );
+            } else if (planned.action === "swap_steth_to_eth_exactout") {
+              tx = await zst.swapSTETHtoExactETH(
+                toAddr,
+                planned.toAmt,
+                planned.maxIn
+              );
+            } else if (planned.action === "swap_wsteth_to_eth_exactin") {
+              tx = await zst.swapExactWSTETHtoETH(
+                toAddr,
+                planned.fromAmt,
+                planned.minOut
+              );
+            } else if (planned.action === "swap_wsteth_to_eth_exactout") {
+              tx = await zst.swapWSTETHtoExactETH(
+                toAddr,
+                planned.toAmt,
+                planned.maxIn
+              );
+            }
+          } else if (planned.kind === "wrap") {
+            // stETH -> wstETH
+            tx = await wst.wrap(planned.fromAmt);
+          } else if (planned.kind === "unwrap") {
+            // wstETH -> stETH
+            tx = await wst.unwrap(planned.fromAmt);
+          }
+          if (!tx) throw new Error("No tx built");
+
+
+          $(
+            "hint"
+          ).innerHTML = `<a href="https://etherscan.io/tx/${tx.hash}" target="_blank">View on Etherscan</a>`;
+          btn.textContent = "Confirming…";
+          const rc = await tx.wait();
+          if (rc.status === 0) {
+            throw new Error("Transaction failed");
+          }
+          btn.textContent = "✓ Done";
+          $("fromAmt").value = "";
+          $("toAmt").value = "";
+          planned = null;
+          await refreshBalances();
+          setTimeout(() => {
+            btn.textContent = "Enter an amount";
+            btn.disabled = true;
+            $("routeBox").style.display = "none";
+          }, 1200);
+        } catch (e) {
+          console.error(e);
+          let msg =
+            e && (e.reason || e.message)
+              ? String(e.reason || e.message)
+              : "Failed";
+          if (/user rejected|denied/i.test(msg)) msg = "Cancelled";
+          $("go").textContent = msg;
+          $("go").disabled = false;
+          setTimeout(() => {
+            $("go").textContent = "Retry";
+          }, 1500);
+        }
+      }
+
+
+      /*** Wire up ***/
+      $("connect").addEventListener("click", connect);
+      $("go").addEventListener("click", execute);
+      $("fromAmt").addEventListener("input", onFromInput);
+      $("toAmt").addEventListener("input", onToInput);
+      setIcons();
+      refreshBalances();
+      getPlan();
+    </script>
+  </body>
+</html>
